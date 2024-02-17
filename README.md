@@ -7,7 +7,7 @@ O dataset em questão é bastante grande para ser hospedado no github, mas pode 
 
 # To-Do:
 - [X] Definição do conjunto de Dados.
-- [ ] Análise da Consistência dos Dados.
+- [X] Análise da Consistência dos Dados.
 - [ ] Análise Exploratória dos Dados.
 - [ ] CLI interface to get dataset.
 - [ ] Put dataset to correct folder.
