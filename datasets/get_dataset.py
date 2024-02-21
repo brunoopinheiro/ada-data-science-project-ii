@@ -5,25 +5,18 @@ from glob import glob
 import pandas as pd
 
 data_significant_columns = [
-    "id",
     "name",
-    "released_at",
     "mana_cost",
     "cmc",
+    "colors",
     "color_identity",
     "keywords",
-    "legalities",
-    "set",
-    "set_name",
-    "rarity",
+    "power",
+    "toughness",
     "type_line",
-    "oracle_text",
-    "flavor_text",
     "edhrec_rank",
     "produced_mana",
     "loyalty",
-    "printed_name",
-    "flavor_name",
     "life_modifier",
     "hand_modifier",
 ]
@@ -85,4 +78,30 @@ def get_subset(
 
     project_dataset = pd.read_json(json_path)
     subset = project_dataset[subset_columns]
+    return subset
+
+
+def get_flattened_subset(
+    subset_columns: list[str] = data_significant_columns,
+    concat_char: str = " | ",
+) -> pd.DataFrame:
+    """This function returns only the significant portion of the dataset,
+    intending to keep the python notebook lighter.
+    It applies a join, using the provided `concat_char` to all columns
+    whose values are lists.
+
+    Args:
+        subset_columns (list[str], optional): A index list of columns.
+                                Defaults to data_significant_columns.
+        concat_char (str, optional): A character to apply to join function.
+
+    Returns:
+        pd.DataFrame: The required subset with flattened list columns.
+    """
+    subset = get_subset(subset_columns)
+
+    for col in subset.columns:
+        if subset[col].apply(lambda x: isinstance(x, list)).all():
+            subset[col] = subset[col].apply(concat_char.join)
+
     return subset
