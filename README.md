@@ -8,7 +8,7 @@ O dataset em questão é bastante grande para ser hospedado no github, mas pode 
 # To-Do:
 - [X] Definição do conjunto de Dados.
 - [X] Análise da Consistência dos Dados.
-  - [ ] Definir subgrupos de colunas dos subsets.
+  - [X] Definir subgrupos de colunas dos subsets.
 - [ ] Análise Exploratória dos Dados.
 - [ ] CLI interface to get dataset.
 - [ ] Put dataset to correct folder.

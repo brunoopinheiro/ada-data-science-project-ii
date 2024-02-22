@@ -105,3 +105,24 @@ def get_flattened_subset(
             subset[col] = subset[col].apply(concat_char.join)
 
     return subset
+
+
+def counts_by_column_value(
+    column_name: str, dataset: pd.DataFrame = None
+) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        column_name (str): The name of the dataset column.
+        dataset (pd.DataFrame, optional): The dataset to apply the function.
+            Defaults to the project dataset in its flattened version.
+
+    Returns:
+        pd.DataFrame: a dataset with columns grouped and its count.
+    """
+    if dataset is None:
+        ds = get_flattened_subset()
+    else:
+        ds = dataset.copy()
+
+    return ds.groupby(column_name).size().reset_index(name="count")
