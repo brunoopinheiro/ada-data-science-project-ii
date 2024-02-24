@@ -21,6 +21,8 @@ data_significant_columns = [
     "hand_modifier",
 ]
 
+default_numeric_columns = ["power", "toughness", "edhrec_rank"]
+
 
 def get_file_path(file_ext="json") -> str:
     """This function looks for the first file of the given extension in the
@@ -83,7 +85,7 @@ def get_subset(
 
 def get_flattened_subset(
     subset_columns: list[str] = data_significant_columns,
-    concat_char: str = " | ",
+    concat_char: str = "",
 ) -> pd.DataFrame:
     """This function returns only the significant portion of the dataset,
     intending to keep the python notebook lighter.
@@ -91,7 +93,7 @@ def get_flattened_subset(
     whose values are lists.
 
     Args:
-        subset_columns (list[str], optional): A index list of columns.
+        subset_columns (list[str], optional): An index list of columns.
                                 Defaults to data_significant_columns.
         concat_char (str, optional): A character to apply to join function.
 
@@ -105,6 +107,38 @@ def get_flattened_subset(
             subset[col] = subset[col].apply(concat_char.join)
 
     return subset
+
+
+def cleaned_dataset(
+    numeric_columns: list[str] = default_numeric_columns,
+    subset_columns: list[str] = data_significant_columns,
+    concat_char: str = "",
+) -> pd.DataFrame:
+    """This function returns only the significant portion of the dataset,
+    intending to keep the python notebook lighter.
+    Uses the `get_flattened_subset` to obtain the subset,
+    inheriting its arguments.
+    This function applies a loop on the provided `numeric_columns` to remove
+    non numeric values and drop its rows.
+
+    Args:
+        numeric_columns (list[str], optional): An index list of columns.
+        subset_columns (list[str], optional): An index list of columns.
+        concat_char (str, optional): A character to apply to join function.
+
+    Returns:
+        pd.DataFrame: The required subset with cleaned numeric values.
+    """
+    ds = get_flattened_subset(subset_columns, concat_char)
+
+    for column in numeric_columns:
+        ds[column] = ds[column].astype(str)
+        ds[column] = ds[column].str.replace(r"\D", "", regex=True)
+        ds[column] = pd.to_numeric(ds[column], errors="coerce")
+        ds.dropna(subset=[column], inplace=True)
+        ds[column] = ds[column].astype(int)
+
+    return ds
 
 
 def counts_by_column_value(
