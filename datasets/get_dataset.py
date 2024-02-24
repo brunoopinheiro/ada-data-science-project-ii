@@ -138,6 +138,17 @@ def cleaned_dataset(
         ds.dropna(subset=[column], inplace=True)
         ds[column] = ds[column].astype(int)
 
+    limite = 2
+
+    ds["color_identity"] = ds.apply(
+        lambda row: (
+            "Multicor"
+            if len(row["color_identity"]) >= limite
+            else row["color_identity"]
+        ),
+        axis=1,
+    )
+
     return ds
 
 
