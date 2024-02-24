@@ -5,28 +5,23 @@ from glob import glob
 import pandas as pd
 
 data_significant_columns = [
-    "id",
     "name",
-    "released_at",
     "mana_cost",
     "cmc",
+    "colors",
     "color_identity",
     "keywords",
-    "legalities",
-    "set",
-    "set_name",
-    "rarity",
+    "power",
+    "toughness",
     "type_line",
-    "oracle_text",
-    "flavor_text",
     "edhrec_rank",
     "produced_mana",
     "loyalty",
-    "printed_name",
-    "flavor_name",
     "life_modifier",
     "hand_modifier",
 ]
+
+default_numeric_columns = ["power", "toughness", "edhrec_rank"]
 
 
 def get_file_path(file_ext="json") -> str:
@@ -86,3 +81,93 @@ def get_subset(
     project_dataset = pd.read_json(json_path)
     subset = project_dataset[subset_columns]
     return subset
+
+
+def get_flattened_subset(
+    subset_columns: list[str] = data_significant_columns,
+    concat_char: str = "",
+) -> pd.DataFrame:
+    """This function returns only the significant portion of the dataset,
+    intending to keep the python notebook lighter.
+    It applies a join, using the provided `concat_char` to all columns
+    whose values are lists.
+
+    Args:
+        subset_columns (list[str], optional): An index list of columns.
+                                Defaults to data_significant_columns.
+        concat_char (str, optional): A character to apply to join function.
+
+    Returns:
+        pd.DataFrame: The required subset with flattened list columns.
+    """
+    subset = get_subset(subset_columns)
+
+    for col in subset.columns:
+        if subset[col].apply(lambda x: isinstance(x, list)).all():
+            subset[col] = subset[col].apply(concat_char.join)
+
+    return subset
+
+
+def cleaned_dataset(
+    numeric_columns: list[str] = default_numeric_columns,
+    subset_columns: list[str] = data_significant_columns,
+    concat_char: str = "",
+) -> pd.DataFrame:
+    """This function returns only the significant portion of the dataset,
+    intending to keep the python notebook lighter.
+    Uses the `get_flattened_subset` to obtain the subset,
+    inheriting its arguments.
+    This function applies a loop on the provided `numeric_columns` to remove
+    non numeric values and drop its rows.
+
+    Args:
+        numeric_columns (list[str], optional): An index list of columns.
+        subset_columns (list[str], optional): An index list of columns.
+        concat_char (str, optional): A character to apply to join function.
+
+    Returns:
+        pd.DataFrame: The required subset with cleaned numeric values.
+    """
+    ds = get_flattened_subset(subset_columns, concat_char)
+
+    for column in numeric_columns:
+        ds[column] = ds[column].astype(str)
+        ds[column] = ds[column].str.replace(r"\D", "", regex=True)
+        ds[column] = pd.to_numeric(ds[column], errors="coerce")
+        ds.dropna(subset=[column], inplace=True)
+        ds[column] = ds[column].astype(int)
+
+    limite = 2
+
+    ds["color_identity"] = ds.apply(
+        lambda row: (
+            "Multicor"
+            if len(row["color_identity"]) >= limite
+            else row["color_identity"]
+        ),
+        axis=1,
+    )
+
+    return ds
+
+
+def counts_by_column_value(
+    column_name: str, dataset: pd.DataFrame = None
+) -> pd.DataFrame:
+    """_summary_
+
+    Args:
+        column_name (str): The name of the dataset column.
+        dataset (pd.DataFrame, optional): The dataset to apply the function.
+            Defaults to the project dataset in its flattened version.
+
+    Returns:
+        pd.DataFrame: a dataset with columns grouped and its count.
+    """
+    if dataset is None:
+        ds = get_flattened_subset()
+    else:
+        ds = dataset.copy()
+
+    return ds.groupby(column_name).size().reset_index(name="count")
